@@ -16,16 +16,39 @@ public class RedesControllerJava {
 		return os;
 	}
 	
+	public void callProcess(String process) {
+   	 
+   	 try {
+   	 Runtime.getRuntime().exec(process);
+   	 } catch(IOException e) {
+   		String msgErro = e.getMessage();
+   		if(msgErro.contains("740")) {
+   			StringBuffer buffer = new StringBuffer();
+   			buffer.append("cmd /c");
+   			buffer.append(" ");
+   			buffer.append(process);
+   			try {
+   				Runtime.getRuntime().exec(buffer.toString());
+   			} catch(IOException e1) {
+   				e1.printStackTrace();
+   			}
+   			
+   		} else {
+   			System.err.println(msgErro);
+   		}
+   	 }
+	}
 	public void ip() {
 		String ip = System.getProperty("ipconfig");
 		System.out.println(ip);
-		
 	}
 	
 	public void ping() {
 		String ping = System.getProperty("PING -4 -n 10 www.google.com.br");
 		System.out.println(ping);
 	}
+	
+	
 	
 	
 	public void readProcess(String process) {
