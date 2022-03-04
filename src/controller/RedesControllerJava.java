@@ -2,71 +2,97 @@ package controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import javax.swing.JOptionPane;
 
 public class RedesControllerJava {
 	
 	public RedesControllerJava () {
 		super ();
     }
+	
+	public class RedesController {
+	    private Process initProcess(String process) {
+	        try {
+	            return Runtime.getRuntime().exec(process);
+	        } catch (Exception e) {
+	            System.err.println(e.getMessage());
+	            return null;
+	        }
+	    }
 
-	public String os() {
+	private String os() {
 		String os = System.getProperty("os.name");
 		return os;
 	}
 	
-	public void callProcess(String process) {
-   	 
-   	 try {
-   	 Runtime.getRuntime().exec(process);
-   	 } catch(IOException e) {
-   		String msgErro = e.getMessage();
-   		if(msgErro.contains("740")) {
-   			StringBuffer buffer = new StringBuffer();
-   			buffer.append("cmd /c");
-   			buffer.append(" ");
-   			buffer.append(process);
-   			try {
-   				Runtime.getRuntime().exec(buffer.toString());
-   			} catch(IOException e1) {
-   				e1.printStackTrace();
-   			}
-   			
-   		} else {
-   			System.err.println(msgErro);
-   		}
-   	 }
-	}
 	public void ip() {
-		String ip = System.getProperty("ipconfig");
-		System.out.println(ip);
-	}
-	
-	public void ping() {
-		String ping = System.getProperty("PING -4 -n 10 www.google.com.br");
-		System.out.println(ping);
-	}
-	
-	
-	
-	
-	public void readProcess(String process) {
-		try {
-			Process p = Runtime.getRuntime().exec(process);
-			InputStream fluxo = p.getInputStream();
-			InputStreamReader leitor = new InputStreamReader(fluxo);
-			BufferedReader buffer = new BufferedReader(leitor);
-			String linha = buffer.readLine();
-			while (linha != null) {
-				System.out.println(linha);
-				linha = buffer.readLine();
-			}
-			buffer.close();
-			leitor.close();
-			fluxo.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+        String command = "";
+        if(os().contains("Windows"))
+            command = "ipconfig";
+        if(os().contains("Linux"))
+            command = "ifconfig";
+        
+        Process process = initProcess(command);
+
+        InputStreamReader stream = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8);
+        BufferedReader buffer = new BufferedReader(stream);
+        String adapt = "";
+      
+        String info_accumulator = "";
+        try {
+            String line = buffer.readLine();
+            while(line != null) {
+                if(line.contains("Adaptador"))
+                    adapt = line;
+                if(line.contains("IPv4") || line.contains("inet"))
+                    info_accumulator += adapt + "\n" + line + "\n";
+                line = buffer.readLine();
+            }
+            JOptionPane.showMessageDialog(null, info_accumulator);
+        }catch(IOException e) {
+            System.err.println("Inválido");
+        }
+    }
+
+    public void ping() {
+        String command = "";
+        if(os().contains("Windows"))
+            command = "ping -4 -n 10 www.google.com.br";
+        if(os().contains("Linux"))
+            command = "ping -4 -c 10 www.google.com.br";
+        
+        Process process = initProcess(command);
+
+        InputStreamReader stream = new InputStreamReader(process.getInputStream());
+        BufferedReader buffer = new BufferedReader(stream);
+
+        try {
+            String line = buffer.readLine();
+            
+            while(line != null) {
+                    
+                System.out.println(line);
+                	if(line.contains("dia")) {
+                    String []lineVector = line.split("ms");
+                    int size = lineVector.length;
+                    String media = lineVector[size-1].replaceAll("\\D+", "");
+                    JOptionPane.showMessageDialog(null, "Média: " + media + "ms");
+                }
+                	if(line.contains("rtt")) {
+                	String []lineVector = line.split(" ");
+                	int size = lineVector.length;
+                	String media = lineVector[size-2].split("/")[1];
+                	JOptionPane.showMessageDialog(null, "\nMédia: " + media + "ms");
+                }
+                line = buffer.readLine();
+            }
+
+        }catch(IOException e) {
+            System.err.println("Inválido");
+        }
+      }
+   }
 }
